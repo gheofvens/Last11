@@ -1,0 +1,4 @@
+/* Dark theme base */
+body { background: #1e1e1e; color: #e0e0e0; }
+.app { border-radius: 12px; }
+.bg-dark-subtle { background-color: #2b2b2b !important; }

@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Главная — Tracker{% endblock %}
+
+{% block content %}
+<main class="app card bg-secondary-subtle text-light p-4">
+  <h1 class="mb-4">Мы вместе уже {{ days_together }} дней!</h1>
+
+  <section class="mb-4">
+    <h2>События</h2>
+    <ul id="event-list" class="list-unstyled">
+      {% for event in events %}
+        <li class="p-2 mb-2 rounded bg-dark-subtle">
+          <strong>{{ event.date.strftime('%d.%m.%Y') }}</strong> — {{ event.name }}
+        </li>
+      {% else %}
+        <li class="p-2 mb-2 rounded bg-dark-subtle">Пока нет событий.</li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section>
+    <h3>Добавить событие</h3>
+    <div class="row g-2">
+      <div class="col-12 col-md-5">
+        <label class="form-label" for="event-name">Название</label>
+        <input class="form-control bg-dark text-light" type="text" id="event-name" placeholder="Например: Годовщина" />
+      </div>
+      <div class="col-12 col-md-4">
+        <label class="form-label" for="event-date">Дата</label>
+        <input class="form-control bg-dark text-light" type="date" id="event-date" value="{{ today.strftime('%Y-%m-%d') }}" />
+      </div>
+      <div class="col-12 col-md-3 d-flex align-items-end">
+        <button id="add-btn" class="btn btn-light w-100">Добавить</button>
+      </div>
+    </div>
+  </section>
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.getElementById('add-btn').addEventListener('click', async () => {
+  const name = document.getElementById('event-name').value.trim();
+  const date = document.getElementById('event-date').value;
+  if (!name || !date) { alert('Заполните название и дату'); return; }
+
+  try {
+    const res = await fetch('{{ url_for("add_event") }}', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ name, date })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      const ul = document.getElementById('event-list');
+      const li = document.createElement('li');
+      const d = new Date(date + 'T00:00:00');
+      const dd = String(d.getDate()).padStart(2, '0');
+      const mm = String(d.getMonth() + 1).padStart(2, '0');
+      const yyyy = d.getFullYear();
+      li.className = "p-2 mb-2 rounded bg-dark-subtle";
+      li.innerHTML = `<strong>${dd}.${mm}.${yyyy}</strong> — ${name}`;
+      ul.appendChild(li);
+      document.getElementById('event-name').value = '';
+      document.getElementById('event-date').value = '{{ today.strftime("%Y-%m-%d") }}';
+    } else {
+      alert('Не удалось добавить событие');
+    }
+  } catch (e) {
+    console.error(e);
+    alert('Ошибка сети');
+  }
+});
+</script>
+{% endblock %}
